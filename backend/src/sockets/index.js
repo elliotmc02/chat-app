@@ -4,6 +4,7 @@ import { CLIENT_URL } from '../config/env.js';
 import { chatSocket } from './chat.js';
 
 let io;
+const sockets = new Set();
 
 export const initializeSocket = server => {
   io = new Server(server, {
@@ -14,14 +15,20 @@ export const initializeSocket = server => {
   });
 
   io.on('connection', socket => {
-    console.log(`User connected: ${socket.id}`);
+    sockets.add(socket.id);
+    updateSockets();
 
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.id}`);
+      sockets.delete(socket.id);
+      updateSockets();
     });
   });
 
   chatSocket();
+
+  const updateSockets = () => {
+    io.emit('users', [...sockets]);
+  }
 
   return io;
 };
