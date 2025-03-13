@@ -3,4 +3,5 @@ export type Message = {
     text: string;
     date: string;
     time: string;
+    recipient?: string;
 }
