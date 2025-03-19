@@ -1,22 +1,40 @@
 import { socket } from '@/socket';
 import { Message } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSelectedUserStore } from '@/stores/selected-user';
+import { useSelectedChatStore } from '@/stores/selected-chat';
 import { saveMessages, updateMessages } from '@/utils/functions';
 
 export const Chat = () => {
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const { selectedUser } = useSelectedUserStore();
+  const { selectedChat } = useSelectedChatStore();
 
-  const storageKey = useMemo(() => selectedUser || 'global', [selectedUser]);
+  const storageKey = useMemo(
+    () => selectedChat.chat || 'global',
+    [selectedChat]
+  );
+
+  const memoizedMessages = useMemo(
+    () =>
+      messages.map((data, index) => (
+        <MessageBubble
+          key={index}
+          message={data}
+          prevSender={messages[index - 1]?.sender}
+          isCurrentUser={data.sender === socket.id}
+        />
+      )),
+    [messages]
+  );
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
-      if (selectedUser) {
-        socket.emit('private-message', selectedUser, message);
+      if (selectedChat.type === 'user') {
+        socket.emit('private-message', selectedChat.chat, message);
+      } else if (selectedChat.type === 'room') {
+        socket.emit('room-message', selectedChat.chat, message);
       } else {
         socket.emit('global-message', message);
       }
@@ -36,37 +54,55 @@ export const Chat = () => {
     saveMessages(storageKey, messages);
   }, [messages, storageKey]);
 
-  const onConnect = useCallback(() => {
-    setIsConnected(true);
-  }, []);
-
-  const onDisconnect = useCallback(() => {
-    setIsConnected(false);
-  }, []);
-
   const onGlobalMessage = useCallback(
     (data: Message) => {
-      if (!selectedUser) {
+      if (selectedChat.type === 'global') {
         setMessages(prevMessages => [...prevMessages, data]);
       } else {
         updateMessages('global', data);
       }
     },
-    [selectedUser]
+    [selectedChat]
   );
 
   const onPrivateMessage = useCallback(
     (data: Message) => {
-      if (data.sender === selectedUser || data.recipient === selectedUser) {
+      if (
+        (data.sender === selectedChat.chat && selectedChat.type === 'user') ||
+        (data.recipient === selectedChat.chat && selectedChat.type === 'user')
+      ) {
         setMessages(prevMessages => [...prevMessages, data]);
       } else {
         updateMessages(data.sender, data);
       }
     },
-    [selectedUser]
+    [selectedChat]
+  );
+
+  const onRoomMessage = useCallback(
+    (data: Message) => {
+      if (
+        data.recipient === selectedChat.chat &&
+        selectedChat.type === 'room'
+      ) {
+        setMessages(prevMessages => [...prevMessages, data]);
+      } else {
+        if (!data.recipient) return;
+        updateMessages(data.recipient, data);
+      }
+    },
+    [selectedChat]
   );
 
   useEffect(() => {
+    const onConnect = () => {
+      setIsConnected(true);
+    };
+
+    const onDisconnect = () => {
+      setIsConnected(false);
+    };
+
     if (socket.connected) {
       onConnect();
     }
@@ -75,20 +111,16 @@ export const Chat = () => {
     socket.on('disconnect', onDisconnect);
     socket.on('global-message', onGlobalMessage);
     socket.on('private-message', onPrivateMessage);
+    socket.on('room-message', onRoomMessage);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('global-message', onGlobalMessage);
       socket.off('private-message', onPrivateMessage);
+      socket.off('room-message', onRoomMessage);
     };
-  }, [
-    selectedUser,
-    onConnect,
-    onDisconnect,
-    onGlobalMessage,
-    onPrivateMessage,
-  ]);
+  }, [selectedChat, onGlobalMessage, onPrivateMessage, onRoomMessage]);
 
   return (
     <div className="bg-white dark:bg-gray-800 w-full flex flex-col items-center justify-center">
@@ -100,17 +132,10 @@ export const Chat = () => {
       ) : (
         <>
           <h1 className="text-2xl dark:text-white uppercase my-5 font-bold">
-            {selectedUser.substring(0, 5) || 'GLOBAL'}
+            {selectedChat.chat.substring(0, 6) || 'GLOBAL'}
           </h1>
           <div className="flex flex-col h-full w-full overflow-y-auto my-4">
-            {messages.map((data, index) => (
-              <MessageBubble
-                key={index}
-                message={data}
-                prevSender={messages[index - 1]?.sender}
-                isCurrentUser={data.sender === socket.id}
-              />
-            ))}
+            {memoizedMessages}
           </div>
           <form
             onSubmit={sendMessage}
@@ -125,7 +150,7 @@ export const Chat = () => {
             />
             <button
               type="submit"
-              className="dark:bg-teal-700 dark:text-white px-2 rounded-md disabled:bg-gray-600"
+              className="dark:bg-teal-700 dark:text-white px-2 rounded-md disabled:bg-gray-600 cursor-pointer"
               disabled={!isConnected}
             >
               Send
@@ -168,7 +193,7 @@ const MessageBubble = ({
                   : 'text-gray-600 dark:text-gray-300'
               }`}
             >
-              {isCurrentUser ? 'You' : message.sender.substring(0, 5)}
+              {isCurrentUser ? 'You' : message.sender.substring(0, 6)}
             </span>
             <span
               className={`text-xs ${
