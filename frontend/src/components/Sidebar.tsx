@@ -32,7 +32,6 @@ export const Sidebar = () => {
     const roomName = prompt('Enter room name');
     if (roomName && roomName?.trim() !== '') {
       socket.emit('create-room', roomName);
-      setSelectedChat({ chat: roomName, type: 'room' });
       setIsModalOpen(false);
     }
   };
@@ -41,7 +40,6 @@ export const Sidebar = () => {
     const roomName = prompt('Enter room name');
     if (roomName && roomName?.trim() !== '') {
       socket.emit('join-room', roomName);
-      setSelectedChat({ chat: roomName, type: 'room' });
       setIsModalOpen(false);
     }
   };
@@ -64,20 +62,32 @@ export const Sidebar = () => {
       toast.error('Room not found');
     };
 
+    const onRoomCreated = (roomName: string) => {
+      setSelectedChat({ chat: roomName, type: 'room' });
+    };
+
+    const onRoomJoined = (roomName: string) => {
+      setSelectedChat({ chat: roomName, type: 'room' });
+    };
+
     setLoading(true);
 
     socket.on('users', onUsers);
     socket.on('rooms', onRooms);
     socket.on('room-exists', onRoomExists);
     socket.on('room-not-found', onRoomNotFound);
+    socket.on('room-created', onRoomCreated);
+    socket.on('room-joined', onRoomJoined);
 
     return () => {
       socket.off('users', onUsers);
       socket.off('rooms', onRooms);
       socket.off('room-exists', onRoomExists);
       socket.off('room-not-found', onRoomNotFound);
+      socket.off('room-created', onRoomCreated);
+      socket.off('room-joined', onRoomJoined);
     };
-  }, []);
+  }, [setSelectedChat]);
 
   return (
     <div className="dark:bg-gray-700 w-1/6 rounded-l-xl p-4 flex flex-col">
