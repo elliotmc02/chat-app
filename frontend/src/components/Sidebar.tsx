@@ -1,20 +1,27 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { socket } from '@/socket';
-import { useSelectedUserStore } from '@/stores/selected-user';
+import { useSelectedChatStore } from '@/stores/selected-chat';
 import { EllipsisVertical } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
+import { Room, Type } from '@/types';
 
 export const Sidebar = () => {
   const [users, setUsers] = useState<string[]>([]);
-  const [rooms, setRooms] = useState<string[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const { selectedUser, setSelectedUser } = useSelectedUserStore();
+  const { selectedChat, setSelectedChat } = useSelectedChatStore();
+
+  const filteredUsers = useMemo(
+    () => users.filter(userId => userId !== socket.id),
+    [users]
+  );
 
   const handleChatSelect = useCallback(
-    (chatId: string) => {
-      setSelectedUser(chatId);
+    (chatId: string, type: Type) => {
+      setSelectedChat({ chat: chatId, type });
     },
-    [setSelectedUser]
+    [setSelectedChat]
   );
 
   const showModal = () => {
@@ -25,13 +32,19 @@ export const Sidebar = () => {
     const roomName = prompt('Enter room name');
     if (roomName && roomName?.trim() !== '') {
       socket.emit('create-room', roomName);
+      setSelectedChat({ chat: roomName, type: 'room' });
       setIsModalOpen(false);
     }
   };
 
-  const onRoomExists = useCallback(() => {
-    console.log('Room already exists');
-  }, []);
+  const joinRoom = () => {
+    const roomName = prompt('Enter room name');
+    if (roomName && roomName?.trim() !== '') {
+      socket.emit('join-room', roomName);
+      setSelectedChat({ chat: roomName, type: 'room' });
+      setIsModalOpen(false);
+    }
+  };
 
   useEffect(() => {
     const onUsers = (users: string[]) => {
@@ -39,8 +52,16 @@ export const Sidebar = () => {
       setLoading(false);
     };
 
-    const onRooms = (rooms: string[]) => {
+    const onRooms = (rooms: Room[]) => {
       setRooms(rooms);
+    };
+
+    const onRoomExists = () => {
+      toast.error('Room already exists');
+    };
+
+    const onRoomNotFound = () => {
+      toast.error('Room not found');
     };
 
     setLoading(true);
@@ -48,11 +69,15 @@ export const Sidebar = () => {
     socket.on('users', onUsers);
     socket.on('rooms', onRooms);
     socket.on('room-exists', onRoomExists);
+    socket.on('room-not-found', onRoomNotFound);
 
     return () => {
       socket.off('users', onUsers);
+      socket.off('rooms', onRooms);
+      socket.off('room-exists', onRoomExists);
+      socket.off('room-not-found', onRoomNotFound);
     };
-  }, [onRoomExists]);
+  }, []);
 
   return (
     <div className="dark:bg-gray-700 w-1/6 rounded-l-xl p-4 flex flex-col">
@@ -63,7 +88,12 @@ export const Sidebar = () => {
         <button className="dark:text-white cursor-pointer" onClick={showModal}>
           <EllipsisVertical />
         </button>
-        {isModalOpen && <Modal onClick={createRoom} />}
+        {isModalOpen && (
+          <Modal>
+            <ModalButton text="Create room" onClick={createRoom} />
+            <ModalButton text="Join room" onClick={joinRoom} />
+          </Modal>
+        )}
       </div>
 
       {loading && (
@@ -74,70 +104,81 @@ export const Sidebar = () => {
           </p>
         </div>
       )}
-      
+
       {!loading && (
         <div className="overflow-y-auto">
           <ChatButton
-            isSelected={selectedUser === ''}
-            onClick={() => handleChatSelect('')}
+            isSelected={selectedChat.type === 'global'}
+            onClick={() => handleChatSelect('', 'global')}
             label="Global"
           />
-          {users
-            .filter(userId => userId != socket.id)
-            .map(userId => (
-              <ChatButton
-                key={userId}
-                isSelected={selectedUser === userId}
-                onClick={() => handleChatSelect(userId)}
-                label={userId.substring(0, 6)}
-              />
-            ))}
-          {rooms.map(room => (
+          {filteredUsers.map(userId => (
             <ChatButton
-              key={room}
-              isSelected={selectedUser === room}
-              onClick={() => handleChatSelect(room)}
-              label={room}
+              key={userId}
+              isSelected={selectedChat.chat === userId}
+              onClick={() => handleChatSelect(userId, 'user')}
+              label={userId.substring(0, 6)}
             />
           ))}
+          {rooms.map(
+            ({ roomName, users }) =>
+              socket.id &&
+              users.includes(socket.id) && (
+                <ChatButton
+                  key={roomName}
+                  isSelected={selectedChat.chat === roomName}
+                  onClick={() => handleChatSelect(roomName, 'room')}
+                  label={roomName}
+                />
+              )
+          )}
+          <Toaster />
         </div>
       )}
     </div>
   );
 };
 
-const ChatButton = memo(
-  ({
-    isSelected,
-    onClick,
-    label,
-  }: {
-    isSelected: boolean;
-    onClick: () => void;
-    label: string;
-  }) => (
-    <button
-      className={`p-2 w-full rounded mb-2 dark:text-white cursor-pointer ${
-        isSelected
-          ? 'dark:bg-teal-800'
-          : 'dark:bg-gray-600 dark:hover:bg-teal-600'
-      }`}
-      onClick={onClick}
-    >
-      {label}
-    </button>
-  )
+const ChatButton = ({
+  isSelected,
+  onClick,
+  label,
+}: {
+  isSelected: boolean;
+  onClick: () => void;
+  label: string;
+}) => (
+  <button
+    className={`p-2 w-full rounded mb-2 dark:text-white cursor-pointer ${
+      isSelected
+        ? 'dark:bg-teal-800'
+        : 'dark:bg-gray-600 dark:hover:bg-teal-600'
+    }`}
+    onClick={onClick}
+  >
+    {label}
+  </button>
 );
 
-const Modal = ({ onClick }: { onClick: () => void }) => {
+const Modal = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="absolute left-0 right-0 top-10 bg-white rounded-md">
-      <button
-        className="cursor-pointer w-full py-1 font-semibold text-xl"
-        onClick={onClick}
-      >
-        Create room
-      </button>
+      {children}
     </div>
   );
 };
+
+const ModalButton = ({
+  text,
+  onClick,
+}: {
+  text: string;
+  onClick: () => void;
+}) => (
+  <button
+    className="cursor-pointer w-full py-1 font-semibold text-xl"
+    onClick={onClick}
+  >
+    {text}
+  </button>
+);
