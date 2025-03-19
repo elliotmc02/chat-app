@@ -1,11 +1,11 @@
 import { Server } from 'socket.io';
 import { CLIENT_URL } from '../config/env.js';
 
-import { chatSocket } from './chat.js';
-import { roomSocket } from './room.js';
+import { initializeChatHandlers } from './chat.js';
+import { initializeRoomHandlers } from './room.js';
 
 let io;
-const sockets = new Set();
+const connectedUsers = new Set();
 
 export const initializeSocket = server => {
   io = new Server(server, {
@@ -16,28 +16,21 @@ export const initializeSocket = server => {
   });
 
   io.on('connection', socket => {
-    sockets.add(socket.id);
+    connectedUsers.add(socket.id);
     updateSockets();
 
     socket.on('disconnect', () => {
-      sockets.delete(socket.id);
+      connectedUsers.delete(socket.id);
       updateSockets();
     });
   });
 
-  chatSocket();
-  roomSocket();
-
-  const updateSockets = () => {
-    io.emit('users', [...sockets]);
-  }
+  initializeChatHandlers(io);
+  initializeRoomHandlers(io);
 
   return io;
 };
 
-export const getIO = () => {
-  if (!io) {
-    throw new Error('Socket.io not initialized');
-  }
-  return io;
-};
+const updateSockets = () => {
+  io.emit('users', [...connectedUsers]);
+}
