@@ -1,44 +1,56 @@
-import { getIO } from "./index.js";
+import { createMessage, serializeRooms } from "../utils/functions.js";
 
-export const roomSocket = () => {
-    const io = getIO();
-
-    const rooms = new Set();
+export const initializeRoomHandlers = (io) => {
+    const rooms = new Map();
 
     io.on('connection', socket => {
+        socket.on('disconnect', () => {
+            rooms.forEach((users, roomName) => {
+                if (users.has(socket.id)) {
+                    const messageData = createMessage('Server', `User ${socket.id} left the room`, roomName);
+                    
+                    users.delete(socket.id);
+                    io.to(roomName).emit('room-message', messageData);
+
+                    if (users.size === 0) {
+                        rooms.delete(roomName);
+
+                        const globalMessage = createMessage('Server', `Room ${roomName} was deleted`);
+
+                        io.emit('global-message', globalMessage)
+                    }
+                }
+            });
+        });
+
         socket.on('create-room', roomName => {
             if (rooms.has(roomName)) {
                 socket.emit('room-exists');
                 return;
             }
-
-            const now = new Date();
-
-            const messageData = {
-                sender: 'Server',
-                text: `User ${socket.id} created room ${roomName}`,
-                date: new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(now),
-                time: new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(now)
-            }
-
-            rooms.add(roomName);
+            rooms.set(roomName, new Set([socket.id]));
             socket.join(roomName);
-            io.emit('rooms', [...rooms]);
+
+            const messageData = createMessage('Server', `User ${socket.id} created room ${roomName}`);
+
+            socket.emit('rooms', serializeRooms(rooms));
             io.emit('global-message', messageData);
+            socket.emit('room-created', roomName);
         });
 
         socket.on('join-room', roomName => {
-            socket.join(roomName);
-            const now = new Date();
-
-            const messageData = {
-                sender: 'Server',
-                text: `User ${socket.id} joined the room`,
-                date: new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(now),
-                time: new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(now)
+            if (!rooms.has(roomName)) {
+                socket.emit('room-not-found');
+                return;
             }
+            socket.join(roomName);
+            rooms.get(roomName).add(socket.id);
 
-            io.to(roomName).emit('private-message', messageData);
+            const messageData = createMessage('Server', `User ${socket.id} joined room ${roomName}`, roomName);
+
+            socket.emit('rooms', serializeRooms(rooms));
+            io.to(roomName).emit('room-message', messageData);
+            socket.emit('room-joined', roomName);
         })
     })
 }
