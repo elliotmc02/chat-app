@@ -1,33 +1,24 @@
-import { getIO } from "./index.js";
+import { createMessage } from "../utils/functions.js";
 
-export const chatSocket = () => {
-    const io = getIO();
-
+export const initializeChatHandlers = (io) => {
     io.on('connection', socket => {
         socket.on('global-message', text => {
-            const now = new Date();
+            const messageData = createMessage(socket.id, text);
 
-            io.emit('global-message', {
-                sender: socket.id,
-                text,
-                date: new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(now),
-                time: new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(now)
-            });
+            io.emit('global-message', messageData);
         });
 
         socket.on('private-message', (recipient, text) => {
-            const now = new Date();
-
-            const messageData = {
-                sender: socket.id,
-                recipient,
-                text,
-                date: new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(now),
-                time: new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(now)
-            }
+            const messageData = createMessage(socket.id, text, recipient);
 
             socket.to(recipient).emit('private-message', messageData);
             socket.emit('private-message', messageData);
+        })
+
+        socket.on('room-message', (roomName, text) => {
+            const messageData = createMessage(socket.id, text, roomName);
+            
+            io.to(roomName).emit('room-message', messageData);
         })
     })
 }
