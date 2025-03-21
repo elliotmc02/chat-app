@@ -8,8 +8,9 @@ export const initializeRoomHandlers = io => {
       rooms.forEach((users, roomName) => {
         if (users.has(socket.id)) {
           const messageData = createMessage(
-            'Server',
+            'system',
             `User ${socket.data.user.username} left the room`,
+            'system',
             roomName
           );
 
@@ -20,8 +21,9 @@ export const initializeRoomHandlers = io => {
             rooms.delete(roomName);
 
             const globalMessage = createMessage(
-              'Server',
-              `Room ${roomName} was deleted`
+              'system',
+              `Room ${roomName} was deleted`,
+              'system'
             );
 
             io.emit('global-message', globalMessage);
@@ -39,12 +41,13 @@ export const initializeRoomHandlers = io => {
       socket.join(roomName);
 
       const messageData = createMessage(
-        'Server',
-        `User ${socket.data.user.username} created room ${roomName}`
+        'system',
+        `User ${socket.data.user.username} created room ${roomName}`,
+        'system'
       );
 
-      socket.emit('rooms', serializeRooms(rooms));
       io.emit('global-message', messageData);
+      socket.emit('rooms', serializeRooms(rooms));
       socket.emit('room-created', roomName);
     });
 
@@ -57,13 +60,14 @@ export const initializeRoomHandlers = io => {
       rooms.get(roomName).add(socket.id);
 
       const messageData = createMessage(
-        'Server',
+        'system',
         `User ${socket.data.user.username} joined room ${roomName}`,
+        'system',
         roomName
       );
 
-      socket.emit('rooms', serializeRooms(rooms));
       io.to(roomName).emit('room-message', messageData);
+      socket.emit('rooms', serializeRooms(rooms));
       socket.emit('room-joined', roomName);
     });
   });
