@@ -3,23 +3,25 @@ import { socket } from '@/socket';
 import { useSelectedChatStore } from '@/stores/selected-chat';
 import { EllipsisVertical } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-import { Room, Type } from '@/types';
+import { Room, Type, User } from '@/types';
 
 export const Sidebar = () => {
-  const [users, setUsers] = useState<string[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [username, setUsername] = useState<string>('');
+  const [users, setUsers] = useState<User[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const { selectedChat, setSelectedChat } = useSelectedChatStore();
 
   const filteredUsers = useMemo(
-    () => users.filter(userId => userId !== socket.id),
+    () => users.filter(({ id }) => id !== socket.id),
     [users]
   );
 
   const handleChatSelect = useCallback(
-    (chatId: string, type: Type) => {
-      setSelectedChat({ chat: chatId, type });
+    (chatId: string, type: Type, user?: User) => {
+      setSelectedChat({ id: chatId, type, user });
     },
     [setSelectedChat]
   );
@@ -44,8 +46,32 @@ export const Sidebar = () => {
     }
   };
 
+  const handleUsernameInput = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setUsername(e.target.value);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      updateUsername();
+    }
+  };
+
+  const handleBlur = () => updateUsername();
+
+  const updateUsername = () => {
+    if (username.trim() !== '' && username !== user?.username) {
+      socket.emit('username:update', username);
+    } else if (username.trim() === '') {
+      setUsername(user?.username || '');
+    }
+  };
+
   useEffect(() => {
-    const onUsers = (users: string[]) => {
+    const onUser = (user: User) => {
+      setUser(user);
+      setUsername(user.username);
+    };
+
+    const onUsers = (users: User[]) => {
       setUsers(users);
       setLoading(false);
     };
@@ -63,15 +89,16 @@ export const Sidebar = () => {
     };
 
     const onRoomCreated = (roomName: string) => {
-      setSelectedChat({ chat: roomName, type: 'room' });
+      setSelectedChat({ id: roomName, type: 'room' });
     };
 
     const onRoomJoined = (roomName: string) => {
-      setSelectedChat({ chat: roomName, type: 'room' });
+      setSelectedChat({ id: roomName, type: 'room' });
     };
 
     setLoading(true);
 
+    socket.on('user', onUser);
     socket.on('users', onUsers);
     socket.on('rooms', onRooms);
     socket.on('room-exists', onRoomExists);
@@ -80,6 +107,7 @@ export const Sidebar = () => {
     socket.on('room-joined', onRoomJoined);
 
     return () => {
+      socket.off('user', onUser);
       socket.off('users', onUsers);
       socket.off('rooms', onRooms);
       socket.off('room-exists', onRoomExists);
@@ -116,33 +144,46 @@ export const Sidebar = () => {
       )}
 
       {!loading && (
-        <div className="overflow-y-auto">
-          <ChatButton
-            isSelected={selectedChat.type === 'global'}
-            onClick={() => handleChatSelect('', 'global')}
-            label="Global"
-          />
-          {filteredUsers.map(userId => (
+        <div className="flex flex-col items-center h-full">
+          <div className="flex-1 overflow-y-auto w-full">
             <ChatButton
-              key={userId}
-              isSelected={selectedChat.chat === userId}
-              onClick={() => handleChatSelect(userId, 'user')}
-              label={userId.substring(0, 6)}
+              isSelected={selectedChat.type === 'global'}
+              onClick={() => handleChatSelect('', 'global')}
+              label="Global"
             />
-          ))}
-          {rooms.map(
-            ({ roomName, users }) =>
-              socket.id &&
-              users.includes(socket.id) && (
-                <ChatButton
-                  key={roomName}
-                  isSelected={selectedChat.chat === roomName}
-                  onClick={() => handleChatSelect(roomName, 'room')}
-                  label={roomName}
-                />
-              )
-          )}
-          <Toaster />
+            {filteredUsers.map(user => (
+              <ChatButton
+                key={user.id}
+                isSelected={selectedChat.id === user.id}
+                onClick={() => handleChatSelect(user.id, 'user', user)}
+                label={user.username}
+              />
+            ))}
+            {rooms.map(
+              ({ roomName, users }) =>
+                socket.id &&
+                users.includes(socket.id) && (
+                  <ChatButton
+                    key={roomName}
+                    isSelected={selectedChat.id === roomName}
+                    onClick={() => handleChatSelect(roomName, 'room')}
+                    label={roomName}
+                  />
+                )
+            )}
+            <Toaster />
+          </div>
+          <div className="bg-white">
+            <h1>Username</h1>
+            <input
+              type="text"
+              className="w-full outline-0"
+              value={username}
+              onChange={handleUsernameInput}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -10,10 +10,7 @@ export const Chat = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const { selectedChat } = useSelectedChatStore();
 
-  const storageKey = useMemo(
-    () => selectedChat.chat || 'global',
-    [selectedChat]
-  );
+  const storageKey = useMemo(() => selectedChat.id || 'global', [selectedChat]);
 
   const memoizedMessages = useMemo(
     () =>
@@ -32,9 +29,9 @@ export const Chat = () => {
     e.preventDefault();
     if (message.trim()) {
       if (selectedChat.type === 'user') {
-        socket.emit('private-message', selectedChat.chat, message);
+        socket.emit('private-message', selectedChat.id, message);
       } else if (selectedChat.type === 'room') {
-        socket.emit('room-message', selectedChat.chat, message);
+        socket.emit('room-message', selectedChat.id, message);
       } else {
         socket.emit('global-message', message);
       }
@@ -68,8 +65,8 @@ export const Chat = () => {
   const onPrivateMessage = useCallback(
     (data: Message) => {
       if (
-        (data.sender === selectedChat.chat && selectedChat.type === 'user') ||
-        (data.recipient === selectedChat.chat && selectedChat.type === 'user')
+        (data.sender === selectedChat.id && selectedChat.type === 'user') ||
+        (data.recipient === selectedChat.id && selectedChat.type === 'user')
       ) {
         setMessages(prevMessages => [...prevMessages, data]);
       } else {
@@ -81,10 +78,7 @@ export const Chat = () => {
 
   const onRoomMessage = useCallback(
     (data: Message) => {
-      if (
-        data.recipient === selectedChat.chat &&
-        selectedChat.type === 'room'
-      ) {
+      if (data.recipient === selectedChat.id && selectedChat.type === 'room') {
         setMessages(prevMessages => [...prevMessages, data]);
       } else {
         if (!data.recipient) return;
@@ -95,17 +89,11 @@ export const Chat = () => {
   );
 
   useEffect(() => {
-    const onConnect = () => {
-      setIsConnected(true);
-    };
+    const onConnect = () => setIsConnected(true);
 
-    const onDisconnect = () => {
-      setIsConnected(false);
-    };
+    const onDisconnect = () => setIsConnected(false);
 
-    if (socket.connected) {
-      onConnect();
-    }
+    if (socket.connected) onConnect();
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
@@ -120,10 +108,10 @@ export const Chat = () => {
       socket.off('private-message', onPrivateMessage);
       socket.off('room-message', onRoomMessage);
     };
-  }, [selectedChat, onGlobalMessage, onPrivateMessage, onRoomMessage]);
+  }, [onGlobalMessage, onPrivateMessage, onRoomMessage]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 w-full flex flex-col items-center justify-center">
+    <div className="bg-white dark:bg-gray-800 w-full flex flex-col items-center justify-center rounded-r-xl">
       {!isConnected || !socket.id ? (
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-t-4 border-blue-500 dark:border-teal-500 border-solid rounded-full animate-spin"></div>
@@ -132,7 +120,7 @@ export const Chat = () => {
       ) : (
         <>
           <h1 className="text-2xl dark:text-white uppercase my-5 font-bold">
-            {selectedChat.chat.substring(0, 6) || 'GLOBAL'}
+            {selectedChat.user?.username || 'GLOBAL'}
           </h1>
           <div className="flex flex-col h-full w-full overflow-y-auto my-4">
             {memoizedMessages}
@@ -193,7 +181,7 @@ const MessageBubble = ({
                   : 'text-gray-600 dark:text-gray-300'
               }`}
             >
-              {isCurrentUser ? 'You' : message.sender.substring(0, 6)}
+              {isCurrentUser ? 'You' : message.senderUsername}
             </span>
             <span
               className={`text-xs ${

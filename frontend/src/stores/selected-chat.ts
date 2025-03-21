@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Chat } from '@/types'
+import { Chat } from '@/types';
 
 interface SelectedChatState {
   selectedChat: Chat;
@@ -7,6 +7,6 @@ interface SelectedChatState {
 }
 
 export const useSelectedChatStore = create<SelectedChatState>()(set => ({
-  selectedChat: { chat: '', type: 'global' },
+  selectedChat: { id: '', type: 'global' },
   setSelectedChat: selectedChat => set(() => ({ selectedChat })),
 }));

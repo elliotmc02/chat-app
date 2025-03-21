@@ -1,8 +1,14 @@
+export type User = {
+  id: string;
+  username: string;
+};
+
 export type Message = {
   sender: string;
   text: string;
   date: string;
   time: string;
+  senderUsername?: string;
   recipient?: string;
 };
 
@@ -14,6 +20,7 @@ export type Room = {
 export type Type = 'global' | 'user' | 'room';
 
 export type Chat = {
-  chat: string;
+  id: string;
   type: Type;
+  user?: User;
 };
