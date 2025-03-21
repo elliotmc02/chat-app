@@ -52,17 +52,28 @@ export const Sidebar = () => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       updateUsername();
+      e.currentTarget.blur();
     }
   };
 
   const handleBlur = () => updateUsername();
 
   const updateUsername = () => {
-    if (username.trim() !== '' && username !== user?.username) {
-      socket.emit('username:update', username);
-    } else if (username.trim() === '') {
+    if (username.trim() === '') {
       setUsername(user?.username || '');
+      toast.error('Username cannot be empty');
+      return;
     }
+
+    if (username.trim() === user?.username) return;
+
+    if (username.trim().length > 10) {
+      setUsername(user?.username || '');
+      toast.error('Username cannot be longer than 10 characters');
+      return;
+    }
+
+    socket.emit('username-update', username);
   };
 
   useEffect(() => {
@@ -120,10 +131,13 @@ export const Sidebar = () => {
   return (
     <div className="dark:bg-gray-700 w-1/6 rounded-l-xl p-4 flex flex-col">
       <div className="flex items-center justify-between mb-6 relative">
-        <h1 className="dark:text-white text-center text-2xl font-bold">
+        <h1 className="dark:text-white text-center text-2xl font-bold select-none">
           CHATS
         </h1>
-        <button className="dark:text-white cursor-pointer" onClick={showModal}>
+        <button
+          className="dark:text-white cursor-pointer dark:hover:bg-gray-600 rounded-md"
+          onClick={showModal}
+        >
           <EllipsisVertical />
         </button>
         {isModalOpen && (
@@ -173,11 +187,13 @@ export const Sidebar = () => {
             )}
             <Toaster />
           </div>
-          <div className="bg-white">
-            <h1>Username</h1>
+          <div className="dark:bg-gray-600 rounded-xl p-2 w-full">
+            <h1 className="dark:text-gray-200 font-semibold text-xl select-none">
+              Username
+            </h1>
             <input
               type="text"
-              className="w-full outline-0"
+              className="w-full outline-0 rounded-lg dark:text-white dark:hover:bg-gray-700 px-0.5"
               value={username}
               onChange={handleUsernameInput}
               onKeyDown={handleKeyDown}
@@ -213,7 +229,7 @@ const ChatButton = ({
 
 const Modal = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="absolute left-0 right-0 top-10 bg-white rounded-md">
+    <div className="absolute left-0 right-0 top-10 dark:bg-gray-900 rounded-md overflow-hidden">
       {children}
     </div>
   );
@@ -227,7 +243,7 @@ const ModalButton = ({
   onClick: () => void;
 }) => (
   <button
-    className="cursor-pointer w-full py-1 font-semibold text-xl"
+    className="cursor-pointer w-full py-1 font-semibold text-xl dark:hover:bg-gray-600 dark:text-white"
     onClick={onClick}
   >
     {text}
