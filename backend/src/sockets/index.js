@@ -3,7 +3,7 @@ import { CLIENT_URL } from '../config/env.js';
 
 import { initializeChatHandlers } from './chat.js';
 import { initializeRoomHandlers } from './room.js';
-import { serializeUsers } from '../utils/functions.js';
+import { createMessage, serializeUsers } from '../utils/functions.js';
 
 let io;
 const connectedUsers = new Map();
@@ -24,10 +24,24 @@ export const initializeSocket = server => {
 
     socket.emit('user', socket.data.user);
 
-    socket.on('username:update', newUsername => {
+    socket.on('username-update', newUsername => {
+      if (newUsername.trim() === '') return;
+      if (newUsername.trim() === socket.data.user.username) return;
+      if (newUsername.trim().length > 10) return;
+      
+      const oldUsername = socket.data.user.username;
       socket.data.user.username = newUsername;
       connectedUsers.set(socket.id, socket.data.user);
       updateSockets();
+
+      const messageData = createMessage(
+        'system',
+        `${oldUsername} changed their username to ${newUsername}`,
+        'system'
+      );
+
+      socket.emit('user', socket.data.user);
+      io.emit('global-message', messageData);
     });
 
     socket.on('disconnect', () => {
