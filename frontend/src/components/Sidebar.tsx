@@ -62,18 +62,28 @@ export const Sidebar = () => {
 
   const createRoom = () => {
     const roomName = prompt('Enter room name');
-    if (roomName && roomName?.trim() !== '') {
-      socket.emit('create-room', roomName);
-      setIsModalOpen(false);
+    setIsModalOpen(false);
+
+    if (roomName === null) return;
+    if (roomName?.trim() === '') {
+      toast.error('Room name cannot be empty');
+      return;
     }
+
+    socket.emit('create-room', roomName);
   };
 
   const joinRoom = () => {
     const roomName = prompt('Enter room name');
-    if (roomName && roomName?.trim() !== '') {
-      socket.emit('join-room', roomName);
-      setIsModalOpen(false);
+    setIsModalOpen(false);
+
+    if (roomName === null) return;
+    if (roomName?.trim() === '') {
+      toast.error('Room name cannot be empty');
+      return;
     }
+
+    socket.emit('join-room', roomName);
   };
 
   const handleUsernameInput = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -139,6 +149,10 @@ export const Sidebar = () => {
       setSelectedChat({ id: roomName, type: 'room' });
     };
 
+    const onAlreadyInRoom = () => {
+      toast.error('You are already in this room');
+    };
+
     setLoading(true);
 
     socket.on('user', onUser);
@@ -148,6 +162,7 @@ export const Sidebar = () => {
     socket.on('room-not-found', onRoomNotFound);
     socket.on('room-created', onRoomCreated);
     socket.on('room-joined', onRoomJoined);
+    socket.on('already-in-room', onAlreadyInRoom);
 
     return () => {
       socket.off('user', onUser);
@@ -157,6 +172,7 @@ export const Sidebar = () => {
       socket.off('room-not-found', onRoomNotFound);
       socket.off('room-created', onRoomCreated);
       socket.off('room-joined', onRoomJoined);
+      socket.off('already-in-room', onAlreadyInRoom);
     };
   }, [setSelectedChat]);
 

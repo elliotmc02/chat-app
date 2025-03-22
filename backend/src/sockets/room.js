@@ -37,6 +37,7 @@ export const initializeRoomHandlers = io => {
         socket.emit('room-exists');
         return;
       }
+      
       rooms.set(roomName, new Set([socket.id]));
       socket.join(roomName);
 
@@ -56,6 +57,12 @@ export const initializeRoomHandlers = io => {
         socket.emit('room-not-found');
         return;
       }
+
+      if (rooms.get(roomName).has(socket.id)) {
+        socket.emit('already-in-room');
+        return;
+      }
+
       socket.join(roomName);
       rooms.get(roomName).add(socket.id);
 
