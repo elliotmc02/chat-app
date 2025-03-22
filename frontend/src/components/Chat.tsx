@@ -111,15 +111,15 @@ export const Chat = () => {
   }, [onGlobalMessage, onPrivateMessage, onRoomMessage]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 w-full flex flex-col items-center justify-center rounded-r-xl">
+    <div className="bg-gray-100 dark:bg-gray-800 w-full flex flex-col items-center justify-center rounded-r-xl">
       {!isConnected || !socket.id ? (
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-t-4 border-blue-500 dark:border-teal-500 border-solid rounded-full animate-spin"></div>
-          <p className="text-lg dark:text-white">Connecting...</p>
+          <div className="w-12 h-12 border-t-4 border-blue-600 dark:border-teal-500 border-solid rounded-full animate-spin"></div>
+          <p className="text-lg text-gray-800 dark:text-white">Connecting...</p>
         </div>
       ) : (
         <>
-          <h1 className="text-2xl dark:text-white uppercase my-5 font-bold">
+          <h1 className="text-2xl text-gray-900 dark:text-white uppercase my-5 font-bold select-none">
             {selectedChat.user?.username || 'GLOBAL'}
           </h1>
           <div className="flex flex-col h-full w-full overflow-y-auto my-4">
@@ -134,11 +134,11 @@ export const Chat = () => {
               value={message}
               onChange={e => setMessage(e.target.value)}
               placeholder="Type a message..."
-              className="dark:bg-white rounded-lg px-2 py-0.5 w-full outline-0"
+              className="bg-white border-gray-300 rounded-lg px-2 py-0.5 w-full outline-none"
             />
             <button
               type="submit"
-              className="dark:bg-teal-700 dark:text-white px-2 rounded-md disabled:bg-gray-600 cursor-pointer"
+              className="bg-blue-600 dark:bg-teal-700 text-white px-2 rounded-md font-medium hover:bg-blue-700 dark:hover:bg-teal-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 cursor-pointer transition-colors"
               disabled={!isConnected}
             >
               Send
@@ -177,8 +177,8 @@ const MessageBubble = ({
             <span
               className={`text-xs font-medium ${
                 isCurrentUser
-                  ? 'text-blue-100 dark:text-teal-200'
-                  : 'text-gray-600 dark:text-gray-300'
+                  ? 'text-blue-700 dark:text-teal-200'
+                  : 'text-gray-800 dark:text-gray-300'
               }`}
             >
               {isCurrentUser ? 'You' : message.senderUsername}
@@ -186,8 +186,8 @@ const MessageBubble = ({
             <span
               className={`text-xs ${
                 isCurrentUser
-                  ? 'text-blue-100 dark:text-teal-200'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-blue-600 dark:text-teal-200'
+                  : 'text-gray-600 dark:text-gray-400'
               }`}
             >
               {message.time}
@@ -200,7 +200,7 @@ const MessageBubble = ({
               ? `bg-blue-500 dark:bg-teal-800 text-white ${
                   isEqualSender ? 'rounded-xl' : 'rounded-xl rounded-tr-none'
                 }`
-              : `bg-gray-200 dark:bg-gray-700 dark:text-white ${
+              : `bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
                   isEqualSender ? 'rounded-xl' : 'rounded-xl rounded-tl-none'
                 }`
           }`}

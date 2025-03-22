@@ -129,13 +129,13 @@ export const Sidebar = () => {
   }, [setSelectedChat]);
 
   return (
-    <div className="dark:bg-gray-700 w-1/6 rounded-l-xl p-4 flex flex-col">
+    <div className="bg-white dark:bg-gray-700 w-1/6 rounded-l-xl p-4 flex flex-col shadow-sm">
       <div className="flex items-center justify-between mb-6 relative">
-        <h1 className="dark:text-white text-center text-2xl font-bold select-none">
+        <h1 className="text-gray-900 dark:text-white text-center text-2xl font-bold select-none">
           CHATS
         </h1>
         <button
-          className="dark:text-white cursor-pointer dark:hover:bg-gray-600 rounded-md"
+          className="text-gray-700 dark:text-white cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md p-1"
           onClick={showModal}
         >
           <EllipsisVertical />
@@ -150,8 +150,8 @@ export const Sidebar = () => {
 
       {loading && (
         <div className="flex flex-col items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="text-gray-300 mt-4 animate-pulse text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 dark:text-gray-300 mt-4 animate-pulse text-center">
             Loading chats...
           </p>
         </div>
@@ -187,13 +187,13 @@ export const Sidebar = () => {
             )}
             <Toaster />
           </div>
-          <div className="dark:bg-gray-600 rounded-xl p-2 w-full">
-            <h1 className="dark:text-gray-200 font-semibold text-xl select-none">
+          <div className="bg-blue-50 dark:bg-gray-600 border border-blue-100 dark:border-gray-500 rounded-xl p-3 w-full">
+            <h1 className="text-gray-800 dark:text-gray-200 font-semibold text-xl select-none mb-2">
               Username
             </h1>
             <input
               type="text"
-              className="w-full outline-0 rounded-lg dark:text-white dark:hover:bg-gray-700 px-0.5"
+              className="w-full bg-white dark:bg-gray-700 outline-none rounded-lg px-3 py-2 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-500"
               value={username}
               onChange={handleUsernameInput}
               onKeyDown={handleKeyDown}
@@ -216,10 +216,10 @@ const ChatButton = ({
   label: string;
 }) => (
   <button
-    className={`p-2 w-full rounded mb-2 dark:text-white cursor-pointer ${
+    className={`p-2 w-full rounded-lg mb-2 font-medium cursor-pointer dark:text-white ${
       isSelected
-        ? 'dark:bg-teal-800'
-        : 'dark:bg-gray-600 dark:hover:bg-teal-600'
+        ? 'bg-blue-100 text-blue-800 dark:bg-teal-800'
+        : 'bg-gray-100 text-gray-800 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-teal-600'
     }`}
     onClick={onClick}
   >
@@ -229,7 +229,7 @@ const ChatButton = ({
 
 const Modal = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="absolute left-0 right-0 top-10 dark:bg-gray-900 rounded-md overflow-hidden">
+    <div className="absolute left-0 right-0 top-10 bg-white dark:bg-gray-900 rounded-md overflow-hidden shadow-lg border border-gray-200 dark:border-gray-600">
       {children}
     </div>
   );
@@ -243,7 +243,7 @@ const ModalButton = ({
   onClick: () => void;
 }) => (
   <button
-    className="cursor-pointer w-full py-1 font-semibold text-xl dark:hover:bg-gray-600 dark:text-white"
+    className="cursor-pointer w-full py-2 px-4 font-medium text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
     onClick={onClick}
   >
     {text}
