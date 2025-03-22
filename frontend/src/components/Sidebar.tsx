@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { socket } from '@/socket';
 import { useSelectedChatStore } from '@/stores/selected-chat';
 import { EllipsisVertical } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { Room, Type, User } from '@/types';
 
 export const Sidebar = () => {
@@ -61,7 +61,7 @@ export const Sidebar = () => {
   const updateUsername = () => {
     if (username.trim() === '') {
       setUsername(user?.username || '');
-      toast.error('Username cannot be empty');
+      toast.error('Username cannot be empty', { id: 'username-empty' });
       return;
     }
 
@@ -69,7 +69,9 @@ export const Sidebar = () => {
 
     if (username.trim().length > 10) {
       setUsername(user?.username || '');
-      toast.error('Username cannot be longer than 10 characters');
+      toast.error('Username cannot be longer than 10 characters', {
+        id: 'username-length',
+      });
       return;
     }
 
@@ -185,7 +187,6 @@ export const Sidebar = () => {
                   />
                 )
             )}
-            <Toaster />
           </div>
           <div className="bg-blue-50 dark:bg-gray-600 border border-blue-100 dark:border-gray-500 rounded-xl p-3 w-full">
             <h1 className="text-gray-800 dark:text-gray-200 font-semibold text-xl select-none mb-2">

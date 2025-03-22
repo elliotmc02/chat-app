@@ -1,5 +1,6 @@
 import { Chat } from '@/components/Chat.tsx';
 import { Sidebar } from '@/components/Sidebar';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   sessionStorage.clear();
@@ -9,6 +10,7 @@ function App() {
         <Sidebar />
         <Chat />
       </div>
+      <Toaster />
     </div>
   );
 }
