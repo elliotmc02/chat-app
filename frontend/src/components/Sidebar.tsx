@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { socket } from '@/socket';
 import { useSelectedChatStore } from '@/stores/selected-chat';
 import { EllipsisVertical } from 'lucide-react';
@@ -12,6 +19,8 @@ export const Sidebar = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const { selectedChat, setSelectedChat } = useSelectedChatStore();
 
   const filteredUsers = useMemo(
@@ -29,6 +38,27 @@ export const Sidebar = () => {
   const showModal = () => {
     setIsModalOpen(prev => !prev);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isModalOpen]);
 
   const createRoom = () => {
     const roomName = prompt('Enter room name');
@@ -137,13 +167,14 @@ export const Sidebar = () => {
           CHATS
         </h1>
         <button
+          ref={buttonRef}
           className="text-gray-700 dark:text-white cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md p-1"
           onClick={showModal}
         >
           <EllipsisVertical />
         </button>
         {isModalOpen && (
-          <Modal>
+          <Modal ref={modalRef}>
             <ModalButton text="Create room" onClick={createRoom} />
             <ModalButton text="Join room" onClick={joinRoom} />
           </Modal>
@@ -228,13 +259,18 @@ const ChatButton = ({
   </button>
 );
 
-const Modal = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="absolute left-0 right-0 top-10 bg-white dark:bg-gray-900 rounded-md overflow-hidden shadow-lg border border-gray-200 dark:border-gray-600">
-      {children}
-    </div>
-  );
-};
+const Modal = forwardRef<HTMLDivElement, { children: React.ReactNode }>(
+  ({ children }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className="absolute left-0 right-0 top-10 bg-white dark:bg-gray-900 rounded-md overflow-hidden shadow-lg border border-gray-200 dark:border-gray-600"
+      >
+        {children}
+      </div>
+    );
+  }
+);
 
 const ModalButton = ({
   text,
