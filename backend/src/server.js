@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
 import { CLIENT_URL, PORT } from './config/env.js';
-import {initializeSocket} from "./sockets/index.js";
+import { initializeSocket } from './sockets/index.js';
 
 const app = express();
 const server = createServer(app);
@@ -15,8 +15,16 @@ app.use(
   })
 );
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello World' });
+const startTime = new Date();
+
+app.get('/status', (req, res) => {
+  const uptime = Math.floor((new Date() - startTime) / 1000);
+
+  res.json({
+    status: 'server is running',
+    started: startTime.toISOString(),
+    uptime,
+  });
 });
 
 server.listen(PORT, () => {
