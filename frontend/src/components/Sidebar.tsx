@@ -30,8 +30,8 @@ export const Sidebar = () => {
   );
 
   const handleChatSelect = useCallback(
-    (chatId: string, type: Type, user?: User) => {
-      setSelectedChat({ id: chatId, type, user });
+    (chatId: string, type: Type, name: string, user?: User) => {
+      setSelectedChat({ id: chatId, type, name, user });
 
       if (window.innerWidth < 640) {
         dispatchEvent('sidebarclose');
@@ -153,12 +153,12 @@ export const Sidebar = () => {
     };
 
     const onRoomCreated = (roomName: string) => {
-      setSelectedChat({ id: roomName, type: 'room' });
+      setSelectedChat({ id: roomName, type: 'room', name: roomName });
       dispatchEvent('sidebarclose');
     };
 
     const onRoomJoined = (roomName: string) => {
-      setSelectedChat({ id: roomName, type: 'room' });
+      setSelectedChat({ id: roomName, type: 'room', name: roomName });
       dispatchEvent('sidebarclose');
     };
 
@@ -224,14 +224,16 @@ export const Sidebar = () => {
           <div className="flex-1 overflow-y-auto w-full">
             <ChatButton
               isSelected={selectedChat.type === 'global'}
-              onClick={() => handleChatSelect('', 'global')}
+              onClick={() => handleChatSelect('', 'global', 'Global')}
               label="GLOBAL"
             />
             {filteredUsers.map(user => (
               <ChatButton
                 key={user.id}
                 isSelected={selectedChat.id === user.id}
-                onClick={() => handleChatSelect(user.id, 'user', user)}
+                onClick={() =>
+                  handleChatSelect(user.id, 'user', user.username, user)
+                }
                 label={user.username}
               />
             ))}
@@ -242,7 +244,7 @@ export const Sidebar = () => {
                   <ChatButton
                     key={roomName}
                     isSelected={selectedChat.id === roomName}
-                    onClick={() => handleChatSelect(roomName, 'room')}
+                    onClick={() => handleChatSelect(roomName, 'room', roomName)}
                     label={roomName}
                   />
                 )

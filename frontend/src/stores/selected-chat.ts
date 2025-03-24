@@ -7,6 +7,6 @@ interface SelectedChatState {
 }
 
 export const useSelectedChatStore = create<SelectedChatState>()(set => ({
-  selectedChat: { id: '', type: 'global' },
+  selectedChat: { id: '', type: 'global', name: 'Global' },
   setSelectedChat: selectedChat => set(() => ({ selectedChat })),
 }));

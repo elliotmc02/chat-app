@@ -11,7 +11,7 @@ export const Chat = () => {
   const { selectedChat } = useSelectedChatStore();
 
   const storageKey = useMemo(() => selectedChat.id || 'global', [selectedChat]);
-
+  
   const memoizedMessages = useMemo(
     () =>
       messages.map((data, index) => (
@@ -120,7 +120,7 @@ export const Chat = () => {
       ) : (
         <>
           <h1 className="text-2xl text-gray-900 dark:text-white uppercase my-5 font-bold select-none">
-            {selectedChat.user?.username || 'GLOBAL'}
+            {selectedChat.name}
           </h1>
           <div className="flex flex-col h-full w-full overflow-y-auto my-4">
             {memoizedMessages}

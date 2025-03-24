@@ -22,5 +22,6 @@ export type Type = 'global' | 'user' | 'room';
 export type Chat = {
   id: string;
   type: Type;
+  name: string;
   user?: User;
 };
