@@ -5,8 +5,8 @@ import { Toaster } from 'react-hot-toast';
 function App() {
   sessionStorage.clear();
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="flex h-3/4 w-full mx-20">
+    <div className="flex items-center justify-center h-screen max-w-7xl mx-auto">
+      <div className="flex h-3/4 w-full mx-20 justify-center">
         <Sidebar />
         <Chat />
       </div>

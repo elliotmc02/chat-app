@@ -183,9 +183,9 @@ export const Sidebar = () => {
   }, [setSelectedChat]);
 
   return (
-    <div className="bg-white dark:bg-gray-700 w-1/6 rounded-l-xl p-4 flex flex-col shadow-sm">
+    <div className="bg-white dark:bg-gray-700 lg:w-1/6 md:w-1/4 sm:rounded-l-xl p-4 sm:flex flex-col shadow-sm hidden">
       <div className="flex items-center justify-between mb-6 relative">
-        <h1 className="text-gray-900 dark:text-white text-center text-2xl font-bold select-none">
+        <h1 className="text-gray-900 dark:text-white text-center lg:text-2xl md:text-xl sm:text-lg font-bold select-none">
           CHATS
         </h1>
         <button
@@ -241,13 +241,13 @@ export const Sidebar = () => {
                 )
             )}
           </div>
-          <div className="bg-blue-50 dark:bg-gray-600 border border-blue-100 dark:border-gray-500 rounded-xl p-3 w-full">
-            <h1 className="text-gray-800 dark:text-gray-200 font-semibold text-xl select-none mb-2">
+          <div className="bg-blue-50 dark:bg-gray-600 border border-blue-100 dark:border-gray-500 rounded-xl lg:p-3 md:p-2 sm:p-1 flex flex-col items-center justify-center">
+            <h1 className="text-gray-800 dark:text-gray-200 font-semibold lg:text-xl md:text-lg select-none mb-2 text-center">
               Username
             </h1>
             <input
               type="text"
-              className="w-full bg-white dark:bg-gray-700 outline-none rounded-lg px-3 py-2 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-500"
+              className="w-full bg-white dark:bg-gray-700 outline-none rounded-lg lg:px-3 lg:py-2 md:px-2 md:py-1 sm:p-1 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-500 lg:text-base md:text-base sm:text-sm"
               value={username}
               onChange={handleUsernameInput}
               onKeyDown={handleKeyDown}
@@ -270,14 +270,14 @@ const ChatButton = ({
   label: string;
 }) => (
   <button
-    className={`p-2 w-full rounded-lg mb-2 font-medium cursor-pointer dark:text-white ${
+    className={`md:p-2 p-1 md:text-base text-sm w-full rounded-lg mb-2 font-medium cursor-pointer dark:text-white ${
       isSelected
         ? 'bg-blue-100 text-blue-800 dark:bg-teal-800'
         : 'bg-gray-100 text-gray-800 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-teal-600'
     }`}
     onClick={onClick}
   >
-    {label}
+    {label.substring(0, 10)}
   </button>
 );
 
@@ -302,7 +302,7 @@ const ModalButton = ({
   onClick: () => void;
 }) => (
   <button
-    className="cursor-pointer w-full py-2 px-4 font-medium text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
+    className="cursor-pointer w-full lg:py-2 md:py-1 lg:px-4 md:px-1 font-medium text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
     onClick={onClick}
   >
     {text}

@@ -111,7 +111,7 @@ export const Chat = () => {
   }, [onGlobalMessage, onPrivateMessage, onRoomMessage]);
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-800 w-full flex flex-col items-center justify-center rounded-r-xl">
+    <div className="bg-gray-100 dark:bg-gray-800 w-full flex flex-col items-center justify-center rounded-r-xl sm:rounded-l-none rounded-l-xl">
       {!isConnected || !socket.id ? (
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-t-4 border-blue-600 dark:border-teal-500 border-solid rounded-full animate-spin"></div>
@@ -163,9 +163,9 @@ const MessageBubble = ({
 
   return (
     <div
-      className={`max-w-xs md:max-w-sm px-3 ${
-        isEqualSender ? 'pt-0.5 mt-0' : 'pt-2 mt-2'
-      } ${isCurrentUser ? 'self-end ml-auto' : 'self-start mr-auto'}`}
+      className={`px-3 ${isEqualSender ? 'pt-0.5 mt-0' : 'pt-2 mt-2'} ${
+        isCurrentUser ? 'self-end' : 'self-start'
+      }`}
     >
       <div className="flex flex-col">
         {!isEqualSender && (
