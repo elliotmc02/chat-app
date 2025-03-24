@@ -16,3 +16,5 @@ export const updateMessages = (key: string, message: Message) => {
 
   saveMessages(key, updatedMessages);
 };
+
+export const dispatchEvent = (eventName: string) => window.dispatchEvent(new Event(eventName));

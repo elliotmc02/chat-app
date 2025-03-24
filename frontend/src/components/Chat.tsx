@@ -111,7 +111,7 @@ export const Chat = () => {
   }, [onGlobalMessage, onPrivateMessage, onRoomMessage]);
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-800 w-full flex flex-col items-center justify-center rounded-r-xl sm:rounded-l-none rounded-l-xl">
+    <div className="bg-gray-100 dark:bg-gray-800 w-full flex flex-col items-center justify-center rounded-xl sm:rounded-l-none">
       {!isConnected || !socket.id ? (
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-t-4 border-blue-600 dark:border-teal-500 border-solid rounded-full animate-spin"></div>

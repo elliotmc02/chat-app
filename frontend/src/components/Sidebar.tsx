@@ -11,6 +11,7 @@ import { useSelectedChatStore } from '@/stores/selected-chat';
 import { EllipsisVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Room, Type, User } from '@/types';
+import { dispatchEvent } from '@/utils/functions';
 
 export const Sidebar = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -31,6 +32,10 @@ export const Sidebar = () => {
   const handleChatSelect = useCallback(
     (chatId: string, type: Type, user?: User) => {
       setSelectedChat({ id: chatId, type, user });
+
+      if (window.innerWidth < 640) {
+        dispatchEvent('sidebarclose');
+      }
     },
     [setSelectedChat]
   );
@@ -66,7 +71,7 @@ export const Sidebar = () => {
 
     if (roomName === null) return;
     if (roomName?.trim() === '') {
-      toast.error('Room name cannot be empty');
+      toast.error('Room name cannot be empty', { id: 'room-empty' });
       return;
     }
 
@@ -79,7 +84,7 @@ export const Sidebar = () => {
 
     if (roomName === null) return;
     if (roomName?.trim() === '') {
-      toast.error('Room name cannot be empty');
+      toast.error('Room name cannot be empty', { id: 'room-empty' });
       return;
     }
 
@@ -140,23 +145,25 @@ export const Sidebar = () => {
     };
 
     const onRoomExists = () => {
-      toast.error('Room already exists');
+      toast.error('Room already exists', { id: 'room-exists' });
     };
 
     const onRoomNotFound = () => {
-      toast.error('Room not found');
+      toast.error('Room not found', { id: 'room-not-found' });
     };
 
     const onRoomCreated = (roomName: string) => {
       setSelectedChat({ id: roomName, type: 'room' });
+      dispatchEvent('sidebarclose');
     };
 
     const onRoomJoined = (roomName: string) => {
       setSelectedChat({ id: roomName, type: 'room' });
+      dispatchEvent('sidebarclose');
     };
 
     const onAlreadyInRoom = () => {
-      toast.error('You are already in this room');
+      toast.error('You are already in this room', { id: 'already-in-room' });
     };
 
     setLoading(true);
@@ -183,7 +190,7 @@ export const Sidebar = () => {
   }, [setSelectedChat]);
 
   return (
-    <div className="bg-white dark:bg-gray-700 lg:w-1/6 md:w-1/4 sm:rounded-l-xl p-4 sm:flex flex-col shadow-sm hidden">
+    <div className="bg-white dark:bg-gray-700 h-full w-full sm:rounded-l-xl p-4 flex flex-col shadow-sm">
       <div className="flex items-center justify-between mb-6 relative">
         <h1 className="text-gray-900 dark:text-white text-center lg:text-2xl md:text-xl sm:text-lg font-bold select-none">
           CHATS
@@ -218,7 +225,7 @@ export const Sidebar = () => {
             <ChatButton
               isSelected={selectedChat.type === 'global'}
               onClick={() => handleChatSelect('', 'global')}
-              label="Global"
+              label="GLOBAL"
             />
             {filteredUsers.map(user => (
               <ChatButton
@@ -247,7 +254,7 @@ export const Sidebar = () => {
             </h1>
             <input
               type="text"
-              className="w-full bg-white dark:bg-gray-700 outline-none rounded-lg lg:px-3 lg:py-2 md:px-2 md:py-1 sm:p-1 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-500 lg:text-base md:text-base sm:text-sm"
+              className="w-full bg-white dark:bg-gray-700 outline-none rounded-lg lg:px-3 lg:py-2 md:px-2 md:py-1 sm:p-1 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-500 md:text-base text-sm"
               value={username}
               onChange={handleUsernameInput}
               onKeyDown={handleKeyDown}
@@ -286,7 +293,7 @@ const Modal = forwardRef<HTMLDivElement, { children: React.ReactNode }>(
     return (
       <div
         ref={ref}
-        className="absolute left-0 right-0 top-10 bg-white dark:bg-gray-900 rounded-md overflow-hidden shadow-lg border border-gray-200 dark:border-gray-600"
+        className="absolute left-0 right-0 top-10 bg-white dark:bg-gray-900 rounded-md overflow-hidden shadow-lg border border-gray-200 dark:border-gray-600 z-20"
       >
         {children}
       </div>
