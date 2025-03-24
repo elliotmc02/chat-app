@@ -115,6 +115,12 @@ export const Sidebar = () => {
       return;
     }
 
+    if (users.some(user => user.username === username)) {
+      setUsername(user?.username || '');
+      toast.error('Username already taken', { id: 'username-taken' });
+      return;
+    }
+
     socket.emit('username-update', username);
   };
 

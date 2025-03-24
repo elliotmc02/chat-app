@@ -28,6 +28,7 @@ export const initializeSocket = server => {
       if (newUsername.trim() === '') return;
       if (newUsername.trim() === socket.data.user.username) return;
       if (newUsername.trim().length > 10) return;
+      if (connectedUsers.has(newUsername)) return;
       
       const oldUsername = socket.data.user.username;
       socket.data.user.username = newUsername;
